@@ -153,6 +153,7 @@ def main():
 
         allWells = [r+c for r in rows for c in cols]
         annotations.update({w:{'experiment':experimentName} for w in allWells})
+        annotationFields.append('experiment')
         
         print( experimentName + ' occurs only in the following wells:')
         
@@ -182,7 +183,10 @@ def main():
     savename = input('File savename: ').strip() + '.csv'
     save = open(savename,'w')
     save.write('well,' + ','.join(annotationFields) + '\n' )
-    for well in annotations.keys():
+    wells = sorted([re.sub(r'^(\w)(\d)$',r'\g<1>0\2',w) for w in annotations.keys()])
+    wells = [re.sub(r'^(\w)0',r'\1',w) for w in wells]
+	
+    for well in wells:
         save.write( well + ',' )
         values = [annotations[well].get(field,'') for field in annotationFields]
         save.write( ','.join(values) + '\n' )
