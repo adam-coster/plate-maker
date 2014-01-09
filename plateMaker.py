@@ -15,7 +15,7 @@ import re
 
 def getPlateType():
     types = ['96','384']
-    print('Choose plate type:')
+    print('Choose plate type: ')
     for ti, ty in enumerate(types):
         print('(', ti ,') ', ty )
     choice = int(input(''))
@@ -35,7 +35,7 @@ def getPlateCols( plateType ):
     return cols
 
 def displayPlate( rows, cols, selection=[] ):
-    print( '  ' + ''.join([c.rjust(2) for c in cols]) ) 
+    print( ' ' + ''.join([c.rjust(2) for c in cols]) ) 
     for row in rows:
         line = row
         selectionsInRow = [s for s in selection if s[0] == row]
@@ -64,12 +64,16 @@ def getLimits( superset, question ):
             limits += subset
         elif subset.find('-')>-1:
             # Will need to create a range
-            ends = subset.split('-')
+            ends  = subset.split('-')
             start = superset.index(ends[0])
             end   = superset.index(ends[1])
             limits += superset[start:end+1]
     return limits
-            
+
+def expandWellInput( rows, cols, annotateWells ):
+    
+    
+    
 def main():
     
     # Choose plate type
@@ -82,19 +86,39 @@ def main():
     
     displayPlate( plateRows, plateCols )
     
+    # Store annotations is dict of dicts
+    # {well:{field:value,...},...}
+    annotations = {}
+    annotationFields = []
+    
     # Allow for annotating limited subsets
     while True:
         experimentName = input( 'Experiment name: ' )
         if experimentName.upper() in ['','QUIT','Q','EXIT']: break
         
-        setLimits = yesNoBoolean( 'Limit to a subset of wells?', False )
+        setLimits = yesNoBoolean( 'Limit to a subset of wells? ', False )
         if not setLimits:
             rows, cols = (plateRows,plateCols)
         else:
             rows = getLimits(plateRows,'Rows (e.g. "a-d", "b d f-h"): ')
             cols = getLimits(plateCols,'Cols (e.g. "1-3", "2 4 6-9"): ')
-            print(rows)
-            print(cols)
+
+        allWells = [r+c for r in rows for c in cols]
+        annotations.update({w:{'experiment':experimentName} for w in allWells})
+        
+        print( experimentName + ' occurs only in the following wells:')
+        displayPlate(plateRows,plateCols,allWells)
+        
+        # Now that we have boundaries,
+        # allow for more complex selections
+        # within. For each selection, add
+        # annotations.
+        while True:
+            annotateWells = input('Wells to annotate: ').strip()
+            if len(annotateWells) == 0: break
+            
+            wells = expandWellInput( rows, cols, annotateWells )
+        
     
 if __name__ == '__main__':
     main()
