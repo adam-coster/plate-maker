@@ -171,13 +171,14 @@ def main():
                 displayPlate( plateRows, plateCols, wells )
                 field = input('Field: ').strip()
                 if field.upper() in ['QUIT','EXIT','Q','']: break
-                annotationFields += field
+                annotationFields += [field]
                 
                 value = input('Value: ').strip()
                 for well in wells:
                     annotations[well][field] = value
                     
-        # Should now have complete set of annotations
+    # Should now have complete set of annotations
+    annotationFields = sorted(list(set(annotationFields)))
     savename = input('File savename: ').strip() + '.csv'
     save = open(savename,'w')
     save.write('well,' + ','.join(annotationFields) + '\n' )
