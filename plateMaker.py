@@ -1,7 +1,6 @@
 # PLATEMAKER
 # by Adam D. Coster <software@adamcoster.com>
-# Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
-# http://creativecommons.org/licenses/by-sa/4.0/deed.en_US
+# 2014 GPLv3
 #
 # PURPOSE
 # To rapidly create a CSV file annotating
@@ -25,11 +24,77 @@ def getPlateType():
         return getPlateType()
     return types[ choice ]
 
+def getPlateRows( plateType ):
+    endRow = {'96':'H','384':'P'}[plateType]
+    rows   = [chr(let) for let in range(65,ord(endRow)+1)]
+    return rows
+
+def getPlateCols( plateType ):
+    endCol = {'96':12,'384':24}[plateType]
+    cols   = [str(i) for i in range(1,endCol+1)]
+    return cols
+
+def displayPlate( rows, cols, selection=[] ):
+    print( '  ' + ''.join([c.rjust(2) for c in cols]) ) 
+    for row in rows:
+        line = row
+        selectionsInRow = [s for s in selection if s[0] == row]
+        selectionCols   = [s[1:] for s in selectionsInRow]
+        for s in cols:
+            if s in selectionCols:
+                line += ' X'
+            else:
+                line += '  '
+        print(line)
+    return True
+
+def yesNoBoolean( question, emptyResponse=False ):
+    answer = input( question )
+    if len(answer) == 0:
+        return emptyResponse
+    shorthand = answer[0].upper()
+    return {'Y':True}.get(shorthand,False)
+    
+def getLimits( superset, question ):
+    limits = []
+    limitsInput = input(question).upper().strip()
+    subsets = limitsInput.strip().split(' ')
+    for subset in subsets:
+        if subset in superset:
+            limits += subset
+        elif subset.find('-')>-1:
+            # Will need to create a range
+            ends = subset.split('-')
+            start = superset.index(ends[0])
+            end   = superset.index(ends[1])
+            limits += superset[start:end+1]
+    return limits
+            
 def main():
     
     # Choose plate type
     plateType = getPlateType()
-    print(plateType)
+    
+    # For this plate type, get the set of
+    # possible wells
+    plateRows = getPlateRows( plateType )
+    plateCols = getPlateCols( plateType )
+    
+    displayPlate( plateRows, plateCols )
+    
+    # Allow for annotating limited subsets
+    while True:
+        experimentName = input( 'Experiment name: ' )
+        if experimentName.upper() in ['','QUIT','Q','EXIT']: break
+        
+        setLimits = yesNoBoolean( 'Limit to a subset of wells?', False )
+        if not setLimits:
+            rows, cols = (plateRows,plateCols)
+        else:
+            rows = getLimits(plateRows,'Rows (e.g. "a-d", "b d f-h"): ')
+            cols = getLimits(plateCols,'Cols (e.g. "1-3", "2 4 6-9"): ')
+            print(rows)
+            print(cols)
     
 if __name__ == '__main__':
     main()
